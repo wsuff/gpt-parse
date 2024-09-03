@@ -26,12 +26,12 @@ def convert_to_markdown(json_data, output_dir, organize_by_date):
         conversations.append({
             'uuid': conversation['uuid'],
             'name': conversation['name'],
-            'created': created.strftime('%m/%d/%y'),
-            'updated': updated.strftime('%m/%d/%y'),
+            'created': created.strftime('%y-%m-%d'),
+            'updated': updated.strftime('%y-%m-%d'),
         })
 
-    conversations.sort(key=lambda x: datetime.datetime.strptime(x['updated'], '%m/%d/%y'), reverse=True)
-    conversation_list_markdown = generate_conversation_list_markdown(conversations)
+    conversations.sort(key=lambda x: datetime.datetime.strptime(x['updated'], '%y-%m-%d'), reverse=True)
+    conversation_list_markdown = generate_conversation_list_markdown(conversations, organize_by_date)
     with open(os.path.join(output_dir, 'conversation_list.md'), 'w', encoding='utf-8') as file:
         file.write(conversation_list_markdown)
 
@@ -42,12 +42,16 @@ def convert_to_markdown(json_data, output_dir, organize_by_date):
         with open(os.path.join(folder_path, filename), 'w', encoding='utf-8') as file:
             file.write(conversation_markdown)
 
-def generate_conversation_list_markdown(conversations):
+def generate_conversation_list_markdown(conversations, organize_by_date):
     markdown_data = "# Conversation List\n\n"
     markdown_data += "| Conversation Name | Last Update | Created |\n"
     markdown_data += "| --- | --- | --- |\n"
     for conversation in conversations:
-        markdown_data += f"| [{conversation['name']}]({conversation['uuid']}.md) | {conversation['updated'].replace('/', '-')} | {conversation['created'].replace('/', '-')} |\n"
+        link = f"{conversation['uuid']}.md"
+        if organize_by_date:
+            link = f"{conversation['updated'][:5]}/{link}"
+        markdown_data += f"| [{conversation['name']}]({link}) | {conversation['updated']} | {conversation['created']} |\n"
+
     return markdown_data
 
 def generate_conversation_markdown(conversation):
