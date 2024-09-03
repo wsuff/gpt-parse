@@ -3,7 +3,7 @@ import markdown
 import os
 import datetime
 import argparse
-
+import html
 def convert_to_markdown(json_data, users_data, output_dir, use_full_name, organize_by_date):
     """
     Converts the JSON chat log data into Markdown format and writes each conversation to a separate file.
@@ -28,7 +28,7 @@ def convert_to_markdown(json_data, users_data, output_dir, use_full_name, organi
         updated = datetime.datetime.strptime(conversation["updated_at"], tz_format)
         conversations.append({
             'uuid': conversation['uuid'],
-            'name': conversation['name'],
+            'name': html.escape(conversation['name']),
             'created': created.strftime('%m/%d/%y'),
             'updated': updated.strftime('%m/%d/%y'),
         })
@@ -39,13 +39,13 @@ def convert_to_markdown(json_data, users_data, output_dir, use_full_name, organi
     markdown_data += "| Conversation Name | Last Update | Created |\n"
     markdown_data += "| --- | --- | --- |\n"
     for conversation in conversations:
-        markdown_data += f"| [{conversation['name']}]({conversation['uuid']}.md) | {conversation['updated']} | {conversation['created']} |\n"
+        markdown_data += f"| [{html.escape(conversation['name'])}]({conversation['uuid']}.md) | {conversation['updated']} | {conversation['created']} |\n"
 
     with open(os.path.join(output_dir, 'conversation_list.md'), 'w', encoding='utf-8') as file:
         file.write(markdown_data)
 
     for conversation in json_data:
-        conversation_markdown_data = f"# {conversation['name']}\n\n"
+        conversation_markdown_data = f"# {html.escape(conversation['name'])}\n\n"
         created = datetime.datetime.strptime(conversation["created_at"], tz_format)
         conversation_markdown_data += f"Created: {created.strftime('%m/%d/%y %H:%M:%S')}\n"
         updated = datetime.datetime.strptime(conversation["updated_at"], tz_format)
@@ -57,7 +57,7 @@ def convert_to_markdown(json_data, users_data, output_dir, use_full_name, organi
                 conversation_markdown_data += f"{created_at.strftime('%m/%d/%y %H:%M:%S')} - **{users_map[sender_uuid]}** :\n"
             else:
                 conversation_markdown_data += f"{created_at.strftime('%m/%d/%y %H:%M:%S')} - **{sender_uuid}** :\n"
-            conversation_markdown_data += message['text'].replace("\n", "\n    ") + "\n\n"
+            conversation_markdown_data += html.escape(message['text'].replace("\n", "\n    ")) + "\n\n"
             if message['attachments']:
                 conversation_markdown_data += "Attachments:\n"
                 for attachment in message['attachments']:
